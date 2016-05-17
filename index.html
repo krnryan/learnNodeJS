@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            font: 13px Helvetica, Arial;
+            height: 100%;
+            width: 100%;
+        }
+
+        form {
+            background: #000;
+            padding: 3px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 5%;
+        }
+
+        form input {
+            border: 0;
+            padding: 10px;
+            width: 90%;
+            margin-right: .5%;
+        }
+
+        form button {
+            width: 9%;
+            background: rgb(130, 224, 255);
+            border: none;
+            padding: 10px;
+        }
+
+        #messages,
+        #logger {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            width: 60%;
+            height: 95%;
+            float: left;
+            overflow: scroll;
+        }
+
+        #logger {
+            width: 40%;
+            border: 2px solid #000000;
+        }
+
+        #messages li,
+        #logger li {
+            padding: 5px 10px;
+        }
+
+        #messages li:nth-child(odd),
+        #logger li:nth-child(odd) {
+            background: #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <ul id="logger"></ul>
+    <ul id="messages"></ul>
+    <form id="chat_form" action="">
+        <input id="m" autocomplete="off" />
+        <button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.3.js" integrity="sha256-laXWtGydpwqJ8JA+X9x2miwmaiKhn8tVmOVEigRNtP4=" crossorigin="anonymous"></script>
+    <script>
+        var socket = io.connect('http://192.168.0.15:8080');
+
+        $('#chat_form').submit(function (e) {
+            var msg = $('#m').val();
+            $('#m').val('');
+            socket.emit('messages', msg); // Emit the message event on the server
+            return false;
+        });
+
+        socket.on('connect', function (data) {
+            nickname = prompt("What is your nickname?");
+            socket.emit('join', nickname);
+        });
+
+        socket.on('scrollTobottom', function (data) {
+            $('#messages').scrollTop($('#messages')[0].scrollHeight);
+        });
+
+        socket.on('messages', function (msg) {
+            $('#messages').append($('<li>').text(msg));
+        });
+
+        socket.on('addUser', function (name) {
+            var user = $('<li data-name=' + name + '>' + name + '</li>');
+            $('#logger').append(user);
+        });
+
+        socket.on('removeUser', function (name) {
+            $('#logger li[data-name=' + name + ']').remove();
+        });
+    </script>
+</body>
+
+</html>
